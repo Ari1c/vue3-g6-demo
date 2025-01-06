@@ -66,10 +66,12 @@ watch(() => [minTimeStep.value, maxTimeStep.value], val => {
     })
 }, { immediate: true })
 
+// 处理滑块变化事件，更新 selectedTimeRange
 const handleSlider = debounce(val => {
     selectedTimeRange.value = [dayjs(val[0]).format(formatted), dayjs(val[1]).format(formatted)]
 
 }, 500)
+// 根据下拉选择的时间范围设置时间范围
 const setTimeRange = (minutes) => {
     minutes = timeRangeValue.value;
     if (minutes == null || minutes == undefined || minutes.trim() == "") {
@@ -95,6 +97,7 @@ const setTimeRange = (minutes) => {
     maxTimeStep.value = timeRange.value[1]
 }
 
+// 根据报警数据动态修改滑块的颜色
 const sliderColorDynMod = () => {
     const element = document.getElementsByClassName('el-slider__runway')[0]
     if (element) {
@@ -112,19 +115,28 @@ const sliderColorDynMod = () => {
             alarmData.forEach((item, index, array) => {
                 item.faultBeginTime = dayjs(item.faultBeginTime).valueOf();
                 item.faultEndTime = dayjs(item.faultEndTime).valueOf();
+                // 修复时间段为0的情况（开始结束的时间相等情况）
                 item.faultEndTime = item.faultBeginTime == item.faultEndTime ? item.faultBeginTime + 2 : item.faultEndTime;
+                // 第一个告警起始时间在选择时间外
                 if( index == 0 && item.faultBeginTime < beginTime) {
                     item.faultBeginTime = beginTime;
                 }
+                // 最后一个告警结束时间在选择时间外
                 if (index == array.length - 1 && item.faultEndTime > endTime) {
                     item.faultEndTime = endTime;
                 }
+                // 计算告警时间段占比
                 item.segProp = (item.faultEndTime - item.faultBeginTime) / allTime;
+                // 告警时间段占比小于0.3，则设置为0.3
                 item.segProp = item.segProp < 0.3 ? 0.3 : item.segProp;
 
+                // 计算中点
                 let median = Math.round((((item.faultEndTime + item.faultBeginTime) / 2 - beginTime) / allTime * 100) * 100) / 100;
-                item.begPoint = item.faultBeginTime !== beginTime ? Math.round((median - item.segProp / 2) * 100) / 100 + '%' : "0%";
-                item.endPoint = item.faultEndTime !== endTime ? Math.round((median + item.segProp / 2) * 100) / 100 + '%' : "100%";
+                // 计算开始点
+                let begPoint = Math.round((median - item.segProp / 2) * 100) / 100;
+                item.begPoint = item.faultBeginTime == beginTime || begPoint < 0 ? "0%" : begPoint + '%';
+                let endPoint = Math.round((median + item.segProp / 2) * 100) / 100;
+                item.endPoint = item.faultEndTime == endTime || endPoint > 100 ? "100%" : endPoint + '%';
             })
             const colorArr = [];
             alarmData.forEach((item, index, array) => {
@@ -177,6 +189,7 @@ const sliderColorDynMod = () => {
 
 }
 
+// 根据时间范围设置滑块的标记点
 const sliderMarksBynMod = () => {
     const formatted = 'HH:mm';
     let marks = {};
@@ -195,11 +208,13 @@ const sliderMarksBynMod = () => {
 
 const res = ref([])
 onMounted(() => {
-    res.value = [
-            { faultBeginTime: '2025-01-03 14:31:44', faultBeginTime: '2025-01-03 14:50:23', faultLevel: 2 },
-            { faultBeginTime: '2025-01-03 15:02:30', faultBeginTime: '2025-01-03 15:03:23', faultLevel: 1 },
-            { faultBeginTime: '2025-01-03 15:07:16', faultBeginTime: '2025-01-03 15:08:23', faultLevel: 2 },
-        ]
+    res.value = Array(3).fill().map((__, i) => {
+        return {
+            faultBeginTime: dayjs(+ new Date() + (i + 1)*100000).subtract(1, 'hour').format(formatted),
+            faultEndTime: dayjs(+ new Date() +  (i + 10)*100000).subtract(1, 'hour').format(formatted),
+            faultLevel: i+1
+        }
+    })
 })
 </script>
 
