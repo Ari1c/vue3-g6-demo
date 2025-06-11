@@ -13,8 +13,13 @@
     "@element-plus/icons-vue": "^2.3.1",
     "dayjs": "^1.11.9",
     "element-plus": "^2.4.3",
+    "later": "^1.2.0",
     "lodash": "^4.17.21",
-    "vue": "^3.5.13"
+    "uuid": "^11.1.0",
+    "vue": "^3.5.13",
+    "vuetify": "^3.8.0-beta.0",
+    "vxe-pc-ui": "^4.3.95",
+    "vxe-table": "^4.13.31"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
